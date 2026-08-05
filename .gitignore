@@ -1,0 +1,12 @@
+# IntelliJ
+.idea/
+*.iml
+
+# 환경 변수와 비밀정보
+.env
+.env.*
+!.env.example
+
+# 운영체제 파일
+.DS_Store
+Thumbs.db

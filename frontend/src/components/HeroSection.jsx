@@ -12,7 +12,7 @@ function HeroSection() {
             <span className="service-badge">AI PERSONAL FINANCE</span>
 
             <h1 className="service-title">
-                Fin<span>Pilot</span>
+                Fin<span>Pilot ✈️</span>
             </h1>
 
             <p className="service-description">

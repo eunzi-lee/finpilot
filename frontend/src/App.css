@@ -1306,3 +1306,111 @@
     justify-self: end;
   }
 }
+/* =========================
+   Month Selector
+========================= */
+
+.dashboard-header-actions,
+.transactions-header-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.month-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.month-selector span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.month-selector input {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  outline: none;
+  background-color: #ffffff;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.month-selector input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 4px #dbeafe;
+}
+
+/* =========================
+   Transaction Actions
+========================= */
+
+.transaction-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.transaction-edit-button,
+.transaction-delete-button {
+  padding: 7px 9px;
+  border: none;
+  border-radius: 8px;
+  background-color: transparent;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.transaction-edit-button {
+  color: #64748b;
+}
+
+.transaction-edit-button:hover {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.transaction-delete-button {
+  color: #94a3b8;
+}
+
+.transaction-delete-button:hover {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+@media (max-width: 650px) {
+  .dashboard-header-actions,
+  .transactions-header-actions {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .month-selector {
+    width: 100%;
+  }
+
+  .month-selector input {
+    width: 100%;
+  }
+
+  .transactions-header-actions .transaction-add-button {
+    width: 100%;
+  }
+
+  .transaction-item-actions {
+    grid-column: 2 / 4;
+    justify-self: end;
+  }
+}

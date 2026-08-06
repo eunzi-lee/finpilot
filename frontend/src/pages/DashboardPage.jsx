@@ -8,36 +8,46 @@ function formatCurrency(amount) {
     return `${new Intl.NumberFormat('ko-KR').format(amount)}원`
 }
 
+function formatMonth(selectedMonth) {
+    const [year, month] = selectedMonth.split('-')
+
+    return `${year}년 ${Number(month)}월`
+}
+
 function DashboardPage() {
     const navigate = useNavigate()
 
     const {
         monthlySummary,
         recentTransactions,
+        selectedMonth,
+        setSelectedMonth,
     } = useTransactions()
 
     const [isTransactionModalOpen, setIsTransactionModalOpen] =
         useState(false)
 
+    const selectedMonthText = formatMonth(selectedMonth)
+
     const summaryData = [
         {
-            title: '이번 달 수입',
+            title: '선택 월 수입',
             amount: formatCurrency(monthlySummary.income),
-            description: '이번 달 누적 수입',
+            description: `${selectedMonthText} 누적 수입`,
             type: 'income',
         },
         {
-            title: '이번 달 지출',
+            title: '선택 월 지출',
             amount: formatCurrency(monthlySummary.expense),
-            description: '이번 달 누적 지출',
+            description: `${selectedMonthText} 누적 지출`,
             type: 'expense',
         },
         {
-            title: '이번 달 잔액',
+            title: '선택 월 잔액',
             amount: formatCurrency(monthlySummary.balance),
             description:
                 monthlySummary.balance >= 0
-                    ? '현재 사용 가능한 금액'
+                    ? '현재 남은 금액'
                     : '지출이 수입보다 많아요',
             type: 'balance',
         },
@@ -64,19 +74,36 @@ function DashboardPage() {
                         <h1>안녕하세요, 은지님 👋</h1>
 
                         <p>
-                            이번 달 금융 현황을 한눈에 확인해보세요.
+                            {selectedMonthText} 금융 현황을
+                            한눈에 확인해보세요.
                         </p>
                     </div>
 
-                    <button
-                        type="button"
-                        className="transaction-add-button"
-                        onClick={() =>
-                            setIsTransactionModalOpen(true)
-                        }
-                    >
-                        + 거래 등록
-                    </button>
+                    <div className="dashboard-header-actions">
+                        <label className="month-selector">
+                            <span>조회 월</span>
+
+                            <input
+                                type="month"
+                                value={selectedMonth}
+                                onChange={(event) =>
+                                    setSelectedMonth(
+                                        event.target.value,
+                                    )
+                                }
+                            />
+                        </label>
+
+                        <button
+                            type="button"
+                            className="transaction-add-button"
+                            onClick={() =>
+                                setIsTransactionModalOpen(true)
+                            }
+                        >
+                            + 거래 등록
+                        </button>
+                    </div>
                 </section>
 
                 <section className="summary-grid">
@@ -115,7 +142,9 @@ function DashboardPage() {
 
                             <div>
                                 <strong>
-                                    거래 데이터를 분석하고 있어요
+                                    {monthlySummary.expense > 0
+                                        ? `${selectedMonthText} 거래 데이터를 분석하고 있어요`
+                                        : '거래 데이터를 기다리고 있어요'}
                                 </strong>
 
                                 <p>
@@ -142,7 +171,7 @@ function DashboardPage() {
                                     RECENT TRANSACTIONS
                                 </span>
 
-                                <h2>최근 거래 내역</h2>
+                                <h2>{selectedMonthText} 거래</h2>
                             </div>
 
                             <button
@@ -165,7 +194,7 @@ function DashboardPage() {
                                 </strong>
 
                                 <p>
-                                    첫 번째 수입 또는 지출을
+                                    선택한 월의 첫 번째 거래를
                                     기록해보세요.
                                 </p>
                             </div>
@@ -176,7 +205,7 @@ function DashboardPage() {
                                         <TransactionItem
                                             key={transaction.id}
                                             transaction={transaction}
-                                            showDelete={false}
+                                            showActions={false}
                                         />
                                     ),
                                 )}

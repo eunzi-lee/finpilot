@@ -18,9 +18,17 @@ const filters = [
     },
 ]
 
+function formatMonth(selectedMonth) {
+    const [year, month] = selectedMonth.split('-')
+
+    return `${year}년 ${Number(month)}월`
+}
+
 function TransactionsPage() {
     const {
-        transactions,
+        monthlyTransactions,
+        selectedMonth,
+        setSelectedMonth,
         deleteTransaction,
     } = useTransactions()
 
@@ -28,16 +36,36 @@ function TransactionsPage() {
     const [isTransactionModalOpen, setIsTransactionModalOpen] =
         useState(false)
 
+    const [transactionToEdit, setTransactionToEdit] =
+        useState(null)
+
+    const selectedMonthText = formatMonth(selectedMonth)
+
     const filteredTransactions = useMemo(() => {
         if (selectedFilter === 'all') {
-            return transactions
+            return monthlyTransactions
         }
 
-        return transactions.filter(
+        return monthlyTransactions.filter(
             (transaction) =>
                 transaction.type === selectedFilter,
         )
-    }, [selectedFilter, transactions])
+    }, [monthlyTransactions, selectedFilter])
+
+    const openCreateModal = () => {
+        setTransactionToEdit(null)
+        setIsTransactionModalOpen(true)
+    }
+
+    const openEditModal = (transaction) => {
+        setTransactionToEdit(transaction)
+        setIsTransactionModalOpen(true)
+    }
+
+    const closeTransactionModal = () => {
+        setIsTransactionModalOpen(false)
+        setTransactionToEdit(null)
+    }
 
     const handleDelete = (transactionId) => {
         const shouldDelete = window.confirm(
@@ -61,20 +89,34 @@ function TransactionsPage() {
                         <h1>거래 내역</h1>
 
                         <p>
-                            수입과 지출을 기록하고 전체 거래를
+                            {selectedMonthText} 수입과 지출을
                             관리해보세요.
                         </p>
                     </div>
 
-                    <button
-                        type="button"
-                        className="transaction-add-button"
-                        onClick={() =>
-                            setIsTransactionModalOpen(true)
-                        }
-                    >
-                        + 거래 등록
-                    </button>
+                    <div className="transactions-header-actions">
+                        <label className="month-selector">
+                            <span>조회 월</span>
+
+                            <input
+                                type="month"
+                                value={selectedMonth}
+                                onChange={(event) =>
+                                    setSelectedMonth(
+                                        event.target.value,
+                                    )
+                                }
+                            />
+                        </label>
+
+                        <button
+                            type="button"
+                            className="transaction-add-button"
+                            onClick={openCreateModal}
+                        >
+                            + 거래 등록
+                        </button>
+                    </div>
                 </section>
 
                 <section className="transactions-card">
@@ -108,22 +150,23 @@ function TransactionsPage() {
 
                     {filteredTransactions.length === 0 ? (
                         <div className="transactions-empty-state">
-                            <div className="placeholder-icon">↔</div>
+                            <div className="placeholder-icon">
+                                ↔
+                            </div>
 
                             <h2>
                                 표시할 거래 내역이 없습니다
                             </h2>
 
                             <p>
-                                새로운 수입 또는 지출을 등록해보세요.
+                                {selectedMonthText}의 새로운 수입
+                                또는 지출을 등록해보세요.
                             </p>
 
                             <button
                                 type="button"
                                 className="primary-button"
-                                onClick={() =>
-                                    setIsTransactionModalOpen(true)
-                                }
+                                onClick={openCreateModal}
                             >
                                 + 첫 거래 등록하기
                             </button>
@@ -135,6 +178,7 @@ function TransactionsPage() {
                                     <TransactionItem
                                         key={transaction.id}
                                         transaction={transaction}
+                                        onEdit={openEditModal}
                                         onDelete={handleDelete}
                                     />
                                 ),
@@ -146,9 +190,8 @@ function TransactionsPage() {
 
             <TransactionModal
                 isOpen={isTransactionModalOpen}
-                onClose={() =>
-                    setIsTransactionModalOpen(false)
-                }
+                onClose={closeTransactionModal}
+                transactionToEdit={transactionToEdit}
             />
         </>
     )

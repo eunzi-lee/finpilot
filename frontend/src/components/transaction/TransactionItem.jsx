@@ -11,8 +11,9 @@ function formatDate(date) {
 
 function TransactionItem({
     transaction,
+    onEdit,
     onDelete,
-    showDelete = true,
+    showActions = true,
 }) {
     const isIncome = transaction.type === 'income'
 
@@ -45,15 +46,24 @@ function TransactionItem({
                 {formatCurrency(transaction.amount)}
             </strong>
 
-            {showDelete && (
-                <button
-                    type="button"
-                    className="transaction-delete-button"
-                    onClick={() => onDelete(transaction.id)}
-                    aria-label="거래 삭제"
-                >
-                    삭제
-                </button>
+            {showActions && (
+                <div className="transaction-item-actions">
+                    <button
+                        type="button"
+                        className="transaction-edit-button"
+                        onClick={() => onEdit(transaction)}
+                    >
+                        수정
+                    </button>
+
+                    <button
+                        type="button"
+                        className="transaction-delete-button"
+                        onClick={() => onDelete(transaction.id)}
+                    >
+                        삭제
+                    </button>
+                </div>
             )}
         </article>
     )

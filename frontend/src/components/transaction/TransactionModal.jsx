@@ -11,23 +11,63 @@ function getToday() {
         .slice(0, 10)
 }
 
-function createInitialForm() {
+function getInitialDate(selectedMonth) {
+    const today = getToday()
+    const currentMonth = today.slice(0, 7)
+
+    if (selectedMonth === currentMonth) {
+        return today
+    }
+
+    return `${selectedMonth}-01`
+}
+
+function createInitialForm(selectedMonth) {
     return {
         type: 'expense',
         amount: '',
         category: transactionCategories.expense[0],
-        date: getToday(),
+        date: getInitialDate(selectedMonth),
         memo: '',
     }
 }
 
-function TransactionModal({ isOpen, onClose }) {
-    const { addTransaction } = useTransactions()
-    const [formData, setFormData] = useState(createInitialForm)
+function createEditForm(transaction) {
+    return {
+        type: transaction.type,
+        amount: transaction.amount,
+        category: transaction.category,
+        date: transaction.date,
+        memo: transaction.memo || '',
+    }
+}
+
+function TransactionModal({
+    isOpen,
+    onClose,
+    transactionToEdit = null,
+}) {
+    const {
+        selectedMonth,
+        addTransaction,
+        updateTransaction,
+    } = useTransactions()
+
+    const [formData, setFormData] = useState(() =>
+        createInitialForm(selectedMonth),
+    )
+
+    const isEditMode = Boolean(transactionToEdit)
 
     useEffect(() => {
         if (!isOpen) {
             return undefined
+        }
+
+        if (transactionToEdit) {
+            setFormData(createEditForm(transactionToEdit))
+        } else {
+            setFormData(createInitialForm(selectedMonth))
         }
 
         const originalOverflow = document.body.style.overflow
@@ -46,7 +86,12 @@ function TransactionModal({ isOpen, onClose }) {
             document.body.style.overflow = originalOverflow
             window.removeEventListener('keydown', handleEscape)
         }
-    }, [isOpen, onClose])
+    }, [
+        isOpen,
+        onClose,
+        selectedMonth,
+        transactionToEdit,
+    ])
 
     if (!isOpen) {
         return null
@@ -72,17 +117,12 @@ function TransactionModal({ isOpen, onClose }) {
         }))
     }
 
-    const handleClose = () => {
-        setFormData(createInitialForm())
-        onClose()
-    }
-
     const handleSubmit = (event) => {
         event.preventDefault()
 
         const amount = Number(formData.amount)
 
-        if (!amount || amount <= 0) {
+        if (!Number.isFinite(amount) || amount <= 0) {
             alert('금액을 1원 이상 입력해주세요.')
             return
         }
@@ -97,19 +137,28 @@ function TransactionModal({ isOpen, onClose }) {
             return
         }
 
-        addTransaction({
+        const transactionData = {
             ...formData,
             amount,
             memo: formData.memo.trim(),
-        })
+        }
 
-        handleClose()
+        if (isEditMode) {
+            updateTransaction(
+                transactionToEdit.id,
+                transactionData,
+            )
+        } else {
+            addTransaction(transactionData)
+        }
+
+        onClose()
     }
 
     return (
         <div
             className="transaction-modal-overlay"
-            onMouseDown={handleClose}
+            onMouseDown={onClose}
         >
             <section
                 className="transaction-modal"
@@ -121,23 +170,29 @@ function TransactionModal({ isOpen, onClose }) {
                 <div className="transaction-modal-header">
                     <div>
                         <span className="dashboard-badge">
-                            NEW TRANSACTION
+                            {isEditMode
+                                ? 'EDIT TRANSACTION'
+                                : 'NEW TRANSACTION'}
                         </span>
 
                         <h2 id="transaction-modal-title">
-                            거래 등록
+                            {isEditMode
+                                ? '거래 수정'
+                                : '거래 등록'}
                         </h2>
 
                         <p>
-                            새로운 수입 또는 지출을 기록해보세요.
+                            {isEditMode
+                                ? '등록된 거래 정보를 수정해보세요.'
+                                : '새로운 수입 또는 지출을 기록해보세요.'}
                         </p>
                     </div>
 
                     <button
                         type="button"
                         className="transaction-modal-close"
-                        onClick={handleClose}
-                        aria-label="거래 등록 창 닫기"
+                        onClick={onClose}
+                        aria-label="거래 모달 닫기"
                     >
                         ×
                     </button>
@@ -252,7 +307,7 @@ function TransactionModal({ isOpen, onClose }) {
                         <button
                             type="button"
                             className="modal-cancel-button"
-                            onClick={handleClose}
+                            onClick={onClose}
                         >
                             취소
                         </button>
@@ -261,7 +316,9 @@ function TransactionModal({ isOpen, onClose }) {
                             type="submit"
                             className="modal-save-button"
                         >
-                            거래 저장
+                            {isEditMode
+                                ? '수정 내용 저장'
+                                : '거래 저장'}
                         </button>
                     </div>
                 </form>

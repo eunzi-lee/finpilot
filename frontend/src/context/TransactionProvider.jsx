@@ -3,6 +3,15 @@ import TransactionContext from './TransactionContext'
 
 const STORAGE_KEY = 'finpilot-transactions'
 
+function getCurrentMonth() {
+    const today = new Date()
+    const timezoneOffset = today.getTimezoneOffset() * 60000
+
+    return new Date(today.getTime() - timezoneOffset)
+        .toISOString()
+        .slice(0, 7)
+}
+
 function getSavedTransactions() {
     try {
         const savedTransactions = localStorage.getItem(STORAGE_KEY)
@@ -23,7 +32,10 @@ function getSavedTransactions() {
 }
 
 function createTransactionId() {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    if (
+        typeof crypto !== 'undefined' &&
+        typeof crypto.randomUUID === 'function'
+    ) {
         return crypto.randomUUID()
     }
 
@@ -33,6 +45,10 @@ function createTransactionId() {
 function TransactionProvider({ children }) {
     const [transactions, setTransactions] = useState(
         getSavedTransactions,
+    )
+
+    const [selectedMonth, setSelectedMonth] = useState(
+        getCurrentMonth,
     )
 
     useEffect(() => {
@@ -48,12 +64,33 @@ function TransactionProvider({ children }) {
             ...transactionData,
             amount: Number(transactionData.amount),
             createdAt: new Date().toISOString(),
+            updatedAt: null,
         }
 
         setTransactions((previousTransactions) => [
             newTransaction,
             ...previousTransactions,
         ])
+    }
+
+    const updateTransaction = (
+        transactionId,
+        transactionData,
+    ) => {
+        setTransactions((previousTransactions) =>
+            previousTransactions.map((transaction) => {
+                if (transaction.id !== transactionId) {
+                    return transaction
+                }
+
+                return {
+                    ...transaction,
+                    ...transactionData,
+                    amount: Number(transactionData.amount),
+                    updatedAt: new Date().toISOString(),
+                }
+            }),
+        )
     }
 
     const deleteTransaction = (transactionId) => {
@@ -75,29 +112,24 @@ function TransactionProvider({ children }) {
                 return dateComparison
             }
 
-            return (
-                new Date(second.createdAt) -
-                new Date(first.createdAt)
-            )
+            const secondCreatedAt = second.createdAt
+                ? new Date(second.createdAt)
+                : new Date(0)
+
+            const firstCreatedAt = first.createdAt
+                ? new Date(first.createdAt)
+                : new Date(0)
+
+            return secondCreatedAt - firstCreatedAt
         })
     }, [transactions])
 
     const monthlyTransactions = useMemo(() => {
-        const today = new Date()
-        const currentYear = today.getFullYear()
-        const currentMonth = today.getMonth()
-
-        return transactions.filter((transaction) => {
-            const transactionDate = new Date(
-                `${transaction.date}T00:00:00`,
-            )
-
-            return (
-                transactionDate.getFullYear() === currentYear &&
-                transactionDate.getMonth() === currentMonth
-            )
-        })
-    }, [transactions])
+        return sortedTransactions.filter(
+            (transaction) =>
+                transaction.date.slice(0, 7) === selectedMonth,
+        )
+    }, [selectedMonth, sortedTransactions])
 
     const monthlySummary = useMemo(() => {
         const income = monthlyTransactions
@@ -138,15 +170,19 @@ function TransactionProvider({ children }) {
     }, [monthlyTransactions])
 
     const recentTransactions = useMemo(
-        () => sortedTransactions.slice(0, 5),
-        [sortedTransactions],
+        () => monthlyTransactions.slice(0, 5),
+        [monthlyTransactions],
     )
 
     const contextValue = {
         transactions: sortedTransactions,
+        monthlyTransactions,
         recentTransactions,
         monthlySummary,
+        selectedMonth,
+        setSelectedMonth,
         addTransaction,
+        updateTransaction,
         deleteTransaction,
     }
 

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import DashboardBudgetOverview from '../components/budget/DashboardBudgetOverview'
 import CategoryExpenseChart from '../components/chart/CategoryExpenseChart'
 import DailyExpenseChart from '../components/chart/DailyExpenseChart'
 import TransactionItem from '../components/transaction/TransactionItem'
@@ -66,6 +67,14 @@ function DashboardPage() {
         },
     ]
 
+    const openTransactionModal = () => {
+        setIsTransactionModalOpen(true)
+    }
+
+    const closeTransactionModal = () => {
+        setIsTransactionModalOpen(false)
+    }
+
     return (
         <>
             <main className="dashboard-page">
@@ -78,8 +87,8 @@ function DashboardPage() {
                         <h1>안녕하세요, 은지님 👋</h1>
 
                         <p>
-                            {selectedMonthText} 금융 현황을
-                            한눈에 확인해보세요.
+                            {selectedMonthText} 금융 현황을 한눈에
+                            확인해보세요.
                         </p>
                     </div>
 
@@ -91,10 +100,11 @@ function DashboardPage() {
                                 type="month"
                                 value={selectedMonth}
                                 onChange={(event) => {
-                                    if (event.target.value) {
-                                        setSelectedMonth(
-                                            event.target.value,
-                                        )
+                                    const nextMonth =
+                                        event.target.value
+
+                                    if (nextMonth) {
+                                        setSelectedMonth(nextMonth)
                                     }
                                 }}
                             />
@@ -103,9 +113,7 @@ function DashboardPage() {
                         <button
                             type="button"
                             className="transaction-add-button"
-                            onClick={() =>
-                                setIsTransactionModalOpen(true)
-                            }
+                            onClick={openTransactionModal}
                         >
                             + 거래 등록
                         </button>
@@ -136,66 +144,19 @@ function DashboardPage() {
                     />
 
                     <CategoryExpenseChart
-                        categoryExpenseData={
-                            categoryExpenseData
-                        }
+                        categoryExpenseData={categoryExpenseData}
                         totalExpense={monthlySummary.expense}
                         selectedMonthText={selectedMonthText}
                     />
-                </section>
 
-                <section className="dashboard-content-grid">
-                    <article className="dashboard-content">
-                        <div className="dashboard-card-header">
-                            <div>
-                                <span className="dashboard-card-label">
-                                    AI ANALYSIS
-                                </span>
-
-                                <h2>AI 소비 인사이트</h2>
-                            </div>
-
-                            <span className="ai-badge">AI</span>
-                        </div>
-
-                        <div className="insight-box">
-                            <span className="insight-icon">✦</span>
-
-                            <div>
-                                <strong>
-                                    {monthlySummary.expense > 0
-                                        ? `${selectedMonthText} 거래 데이터를 분석하고 있어요`
-                                        : '거래 데이터를 기다리고 있어요'}
-                                </strong>
-
-                                <p>
-                                    거래가 쌓이면 소비 패턴과
-                                    카테고리별 지출을 분석하여
-                                    맞춤형 금융 코칭을 제공할
-                                    예정입니다.
-                                </p>
-                            </div>
-                        </div>
-
-                        <button
-                            type="button"
-                            className="secondary-button"
-                            onClick={() => navigate('/ai-coach')}
-                        >
-                            AI 코치 확인하기
-                        </button>
-                    </article>
-
-                    <article className="dashboard-content">
+                    <article className="dashboard-content dashboard-recent-card">
                         <div className="dashboard-card-header">
                             <div>
                                 <span className="dashboard-card-label">
                                     RECENT TRANSACTIONS
                                 </span>
 
-                                <h2>
-                                    {selectedMonthText} 거래
-                                </h2>
+                                <h2>{selectedMonthText} 거래</h2>
                             </div>
 
                             <button
@@ -237,13 +198,55 @@ function DashboardPage() {
                         )}
                     </article>
                 </section>
+
+                <DashboardBudgetOverview />
+
+                <section className="dashboard-content-grid dashboard-content-grid-single">
+                    <article className="dashboard-content">
+                        <div className="dashboard-card-header">
+                            <div>
+                                <span className="dashboard-card-label">
+                                    AI ANALYSIS
+                                </span>
+
+                                <h2>AI 소비 인사이트</h2>
+                            </div>
+
+                            <span className="ai-badge">AI</span>
+                        </div>
+
+                        <div className="insight-box">
+                            <span className="insight-icon">✦</span>
+
+                            <div>
+                                <strong>
+                                    {monthlySummary.expense > 0
+                                        ? `${selectedMonthText} 거래 데이터를 분석하고 있어요`
+                                        : '거래 데이터를 기다리고 있어요'}
+                                </strong>
+
+                                <p>
+                                    거래가 쌓이면 소비 패턴과
+                                    카테고리별 지출을 분석하여 맞춤형
+                                    금융 코칭을 제공할 예정입니다.
+                                </p>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => navigate('/ai-coach')}
+                        >
+                            AI 코치 확인하기
+                        </button>
+                    </article>
+                </section>
             </main>
 
             <TransactionModal
                 isOpen={isTransactionModalOpen}
-                onClose={() =>
-                    setIsTransactionModalOpen(false)
-                }
+                onClose={closeTransactionModal}
             />
         </>
     )

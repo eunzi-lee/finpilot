@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import CategoryExpenseChart from '../components/chart/CategoryExpenseChart'
+import DailyExpenseChart from '../components/chart/DailyExpenseChart'
 import TransactionItem from '../components/transaction/TransactionItem'
 import TransactionModal from '../components/transaction/TransactionModal'
 import useTransactions from '../hooks/useTransactions'
@@ -20,6 +22,8 @@ function DashboardPage() {
     const {
         monthlySummary,
         recentTransactions,
+        dailyExpenseData,
+        categoryExpenseData,
         selectedMonth,
         setSelectedMonth,
     } = useTransactions()
@@ -86,11 +90,13 @@ function DashboardPage() {
                             <input
                                 type="month"
                                 value={selectedMonth}
-                                onChange={(event) =>
-                                    setSelectedMonth(
-                                        event.target.value,
-                                    )
-                                }
+                                onChange={(event) => {
+                                    if (event.target.value) {
+                                        setSelectedMonth(
+                                            event.target.value,
+                                        )
+                                    }
+                                }}
                             />
                         </label>
 
@@ -123,6 +129,21 @@ function DashboardPage() {
                     ))}
                 </section>
 
+                <section className="dashboard-chart-grid">
+                    <DailyExpenseChart
+                        dailyExpenseData={dailyExpenseData}
+                        selectedMonthText={selectedMonthText}
+                    />
+
+                    <CategoryExpenseChart
+                        categoryExpenseData={
+                            categoryExpenseData
+                        }
+                        totalExpense={monthlySummary.expense}
+                        selectedMonthText={selectedMonthText}
+                    />
+                </section>
+
                 <section className="dashboard-content-grid">
                     <article className="dashboard-content">
                         <div className="dashboard-card-header">
@@ -149,8 +170,9 @@ function DashboardPage() {
 
                                 <p>
                                     거래가 쌓이면 소비 패턴과
-                                    카테고리별 지출을 분석하여 맞춤형
-                                    금융 코칭을 제공할 예정입니다.
+                                    카테고리별 지출을 분석하여
+                                    맞춤형 금융 코칭을 제공할
+                                    예정입니다.
                                 </p>
                             </div>
                         </div>
@@ -171,7 +193,9 @@ function DashboardPage() {
                                     RECENT TRANSACTIONS
                                 </span>
 
-                                <h2>{selectedMonthText} 거래</h2>
+                                <h2>
+                                    {selectedMonthText} 거래
+                                </h2>
                             </div>
 
                             <button

@@ -42,6 +42,18 @@ function createTransactionId() {
     return `${Date.now()}-${Math.random()}`
 }
 
+function getDaysInMonth(selectedMonth) {
+    const [year, month] = selectedMonth
+        .split('-')
+        .map(Number)
+
+    if (!year || !month) {
+        return 0
+    }
+
+    return new Date(year, month, 0).getDate()
+}
+
 function TransactionProvider({ children }) {
     const [transactions, setTransactions] = useState(
         getSavedTransactions,
@@ -127,7 +139,8 @@ function TransactionProvider({ children }) {
     const monthlyTransactions = useMemo(() => {
         return sortedTransactions.filter(
             (transaction) =>
-                transaction.date.slice(0, 7) === selectedMonth,
+                transaction.date?.slice(0, 7) ===
+                selectedMonth,
         )
     }, [selectedMonth, sortedTransactions])
 
@@ -169,6 +182,91 @@ function TransactionProvider({ children }) {
         }
     }, [monthlyTransactions])
 
+    const dailyExpenseData = useMemo(() => {
+        const numberOfDays = getDaysInMonth(selectedMonth)
+
+        const dailyData = Array.from(
+            { length: numberOfDays },
+            (_, index) => ({
+                day: index + 1,
+                label: `${index + 1}일`,
+                amount: 0,
+            }),
+        )
+
+        monthlyTransactions
+            .filter(
+                (transaction) =>
+                    transaction.type === 'expense',
+            )
+            .forEach((transaction) => {
+                const transactionDay = Number(
+                    transaction.date.slice(8, 10),
+                )
+
+                const dayIndex = transactionDay - 1
+
+                if (dailyData[dayIndex]) {
+                    dailyData[dayIndex].amount +=
+                        transaction.amount
+                }
+            })
+
+        return dailyData
+    }, [monthlyTransactions, selectedMonth])
+
+    const categoryExpenseData = useMemo(() => {
+        const categoryTotals = monthlyTransactions
+            .filter(
+                (transaction) =>
+                    transaction.type === 'expense',
+            )
+            .reduce((totals, transaction) => {
+                const category =
+                    transaction.category || '기타'
+
+                totals[category] =
+                    (totals[category] || 0) +
+                    transaction.amount
+
+                return totals
+            }, {})
+
+        const sortedCategoryData = Object.entries(
+            categoryTotals,
+        )
+            .map(([category, amount]) => ({
+                category,
+                amount,
+            }))
+            .sort(
+                (first, second) =>
+                    second.amount - first.amount,
+            )
+
+        if (sortedCategoryData.length <= 6) {
+            return sortedCategoryData
+        }
+
+        const topCategories =
+            sortedCategoryData.slice(0, 5)
+
+        const otherAmount = sortedCategoryData
+            .slice(5)
+            .reduce(
+                (total, item) => total + item.amount,
+                0,
+            )
+
+        return [
+            ...topCategories,
+            {
+                category: '기타',
+                amount: otherAmount,
+            },
+        ]
+    }, [monthlyTransactions])
+
     const recentTransactions = useMemo(
         () => monthlyTransactions.slice(0, 5),
         [monthlyTransactions],
@@ -179,6 +277,8 @@ function TransactionProvider({ children }) {
         monthlyTransactions,
         recentTransactions,
         monthlySummary,
+        dailyExpenseData,
+        categoryExpenseData,
         selectedMonth,
         setSelectedMonth,
         addTransaction,
